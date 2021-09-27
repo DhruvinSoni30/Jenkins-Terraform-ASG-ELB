@@ -413,14 +413,46 @@ In this tutorial, I will be going to create various resources like **VPC, EC2, S
   ```
 * Here I am installing docker and running my portfolio website’s docker image
 
-So, now our entire code is ready. We need to run the below steps to create the infrastructure.
+So, now our entire code is ready. We need to create `Pipeline` for automation.
 
-* `terraform init` is to initialize the working directory and downloading plugins of the AWS provider
-* `terraform plan` is to create the execution plan for our code
-* `terraform apply` is to create the actual infrastructure. It will ask you to provide the Access Key and Secret Key in order to create the infrastructure. So,     instead of hardcoding the Access Key and Secret Key, it is better to apply at the run time.
+* Create `Jenkinsfile` and add below code to it.
+  ```
+  properties([ parameters([
+  string( name: 'AWS_ACCESS_KEY_ID', defaultValue: ''),
+  string( name: 'AWS_SECRET_ACCESS_KEY', defaultValue: ''),
+  ]), pipelineTriggers([]) ])
 
+  // Environment Variables.
+  env.access_key = AWS_ACCESS_KEY_ID
+  env.secret_key = AWS_SECRET_ACCESS_KEY
 
-After terraform apply completes you can verify the resources on the AWS console. Terraform will create the below resources.
+  pipeline {
+    agent any
+    stages {
+         stage ('Terraform Init'){
+            steps {
+            sh "terraform init"
+          }
+       }
+         stage ('Terraform Plan'){
+            steps {
+            sh "terraform plan" 
+         }
+      }
+         stage ('Terraform Apply - Create Instances and Configurig Clustering'){
+            steps {
+            sh "terraform apply -auto-approve"
+        }
+      }
+    }
+  }
+  ```
+
+* Jenkins will scan the pipeline 
+* Click on `build now` and provide the AWS Access key & Secret Key and click on `build1 
+
+After Jenkins Job completes you can verify the resources on the AWS console. Terraform will create the below resources.
+
 * VPC
 * Auto Scaling Group
 * Launch Configurationn
